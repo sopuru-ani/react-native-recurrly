@@ -1,6 +1,8 @@
 import AuthField from "@/components/auth/AuthField";
+import { subscriptionCreatedProperties } from "@/config/analytics";
 import { icons } from "@/constants/icons";
 import { colors } from "@/constants/theme";
+import { useAnalytics } from "@/lib/analytics";
 import clsx from "clsx";
 import dayjs from "dayjs";
 import { X } from "lucide-react-native";
@@ -58,6 +60,7 @@ function CreateSubscriptionModal({
   onClose,
   onSubmit,
 }: CreateSubscriptionModalProps) {
+  const { capture } = useAnalytics();
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [frequency, setFrequency] = useState<BillingFrequency>("Monthly");
@@ -102,6 +105,10 @@ function CreateSubscriptionModal({
     };
 
     onSubmit(subscription);
+    capture(
+      "subscription_created",
+      subscriptionCreatedProperties(subscription),
+    );
     resetForm();
     onClose();
   };

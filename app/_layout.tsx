@@ -1,4 +1,5 @@
 import { PostHogScreenTracker } from "@/components/PostHogScreenTracker";
+import { posthogConfig, posthogOptions } from "@/config/posthog";
 import "@/global.css";
 import { ClerkProvider } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
@@ -37,9 +38,9 @@ export default function RootLayout() {
 
   return (
     <PostHogProvider
-      apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY!}
-      options={{ host: process.env.EXPO_PUBLIC_POSTHOG_HOST }}
-      autocapture={{ captureScreens: false, captureTouches: true }}
+      apiKey={posthogConfig.apiKey}
+      options={posthogOptions}
+      autocapture={posthogConfig.autocapture}
     >
       <PostHogScreenTracker />
       <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
