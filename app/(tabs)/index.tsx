@@ -2,10 +2,7 @@ import CreateSubscriptionModal from "@/components/CreateSubscriptionModal";
 import ListHeading from "@/components/ListHeading";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
-import {
-  HOME_BALANCE,
-  UPCOMING_SUBSCRIPTIONS,
-} from "@/constants/data";
+import { HOME_BALANCE } from "@/constants/data";
 import { icons } from "@/constants/icons";
 import images from "@/constants/images";
 import { getUserDisplayName } from "@/lib/auth";
@@ -24,7 +21,8 @@ export default function App() {
   const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<
     string | null
   >(null);
-  const { subscriptions, addSubscription } = useSubscriptions();
+  const { subscriptions, upcomingSubscriptions, addSubscription } =
+    useSubscriptions();
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
 
   const displayName = getUserDisplayName(user);
@@ -70,7 +68,7 @@ export default function App() {
                 <ListHeading title="Upcoming" />
 
                 <FlatList
-                  data={UPCOMING_SUBSCRIPTIONS}
+                  data={upcomingSubscriptions}
                   renderItem={({ item }) => (
                     <UpcomingSubscriptionCard {...item} />
                   )}
