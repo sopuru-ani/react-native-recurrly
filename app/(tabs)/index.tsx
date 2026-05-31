@@ -1,20 +1,21 @@
+import CreateSubscriptionModal from "@/components/CreateSubscriptionModal";
 import ListHeading from "@/components/ListHeading";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
 import {
   HOME_BALANCE,
-  HOME_SUBSCRIPTIONS,
   UPCOMING_SUBSCRIPTIONS,
 } from "@/constants/data";
 import { icons } from "@/constants/icons";
 import images from "@/constants/images";
 import { getUserDisplayName } from "@/lib/auth";
+import { useSubscriptions } from "@/lib/subscriptions";
 import { formatCurrency } from "@/lib/utils";
 import { useUser } from "@clerk/expo";
 import dayjs from "dayjs";
 import { styled } from "nativewind";
 import { useState } from "react";
-import { FlatList, Image, Text, View } from "react-native";
+import { FlatList, Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 const SafeAreaView = styled(RNSafeAreaView);
 
@@ -23,6 +24,8 @@ export default function App() {
   const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<
     string | null
   >(null);
+  const { subscriptions, addSubscription } = useSubscriptions();
+  const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
 
   const displayName = getUserDisplayName(user);
   const avatarSource = user?.imageUrl
@@ -40,9 +43,14 @@ export default function App() {
                   <Image source={avatarSource} className="home-avatar" />
                   <Text className="home-user-name">{displayName}</Text>
                 </View>
-                <View className="rounded-full border border-border p-1">
+                <Pressable
+                  className="rounded-full border border-border p-1"
+                  onPress={() => setIsCreateModalVisible(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Add subscription"
+                >
                   <Image source={icons.add} className="home-add-icon" />
-                </View>
+                </Pressable>
               </View>
 
               <View className="home-balance-card">
@@ -79,7 +87,7 @@ export default function App() {
               <ListHeading title="All Subscriptions" />
             </>
           )}
-          data={HOME_SUBSCRIPTIONS}
+          data={subscriptions}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <SubscriptionCard
@@ -101,6 +109,12 @@ export default function App() {
           contentContainerClassName="pb-30"
         />
       </View>
+
+      <CreateSubscriptionModal
+        visible={isCreateModalVisible}
+        onClose={() => setIsCreateModalVisible(false)}
+        onSubmit={addSubscription}
+      />
     </SafeAreaView>
   );
 }
