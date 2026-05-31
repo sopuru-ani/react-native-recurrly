@@ -1,7 +1,7 @@
 import AuthBrandBlock from "@/components/auth/AuthBrandBlock";
 import AuthField from "@/components/auth/AuthField";
 import { finalizeAndNavigate, isValidEmail } from "@/lib/auth";
-import { useSignIn } from "@clerk/expo";
+import { useAuth, useSignIn } from "@clerk/expo";
 import clsx from "clsx";
 import { Link, useRouter } from "expo-router";
 import { styled } from "nativewind";
@@ -21,6 +21,7 @@ import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 const SafeAreaView = styled(RNSafeAreaView);
 
 export default function SignIn() {
+  const { isLoaded } = useAuth();
   const { signIn, errors, fetchStatus } = useSignIn();
   const router = useRouter();
 
@@ -32,12 +33,15 @@ export default function SignIn() {
 
   const isSubmitting = fetchStatus === "fetching";
   const canSubmit =
+    isLoaded &&
     emailAddress.trim().length > 0 &&
     password.length > 0 &&
     isValidEmail(emailAddress) &&
     !isSubmitting;
 
   const handleSubmit = async () => {
+    if (!isLoaded) return;
+
     setEmailError(undefined);
     setMfaMessage(undefined);
 
@@ -73,12 +77,24 @@ export default function SignIn() {
   };
 
   const handleVerify = async () => {
+    if (!isLoaded) return;
+
     await signIn.mfa.verifyEmailCode({ code });
 
     if (signIn.status === "complete") {
       await finalizeAndNavigate(signIn, router);
     }
   };
+
+  if (!isLoaded) {
+    return (
+      <SafeAreaView className="auth-safe-area">
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator color="#081126" />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (signIn.status === "needs_client_trust") {
     return (
@@ -139,7 +155,10 @@ export default function SignIn() {
 
                   <Pressable
                     className="auth-secondary-button"
-                    onPress={() => signIn.mfa.sendEmailCode()}
+                    onPress={() => {
+                      if (!isLoaded) return;
+                      void signIn.mfa.sendEmailCode();
+                    }}
                     disabled={isSubmitting}
                   >
                     <Text className="auth-secondary-button-text">
@@ -149,7 +168,10 @@ export default function SignIn() {
 
                   <Pressable
                     className="auth-secondary-button"
-                    onPress={() => signIn.reset()}
+                    onPress={() => {
+                      if (!isLoaded) return;
+                      void signIn.reset();
+                    }}
                     disabled={isSubmitting}
                   >
                     <Text className="auth-secondary-button-text">

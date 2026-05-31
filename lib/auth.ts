@@ -1,4 +1,5 @@
 import { type Href, type Router } from "expo-router";
+import { Linking, Platform } from "react-native";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -58,6 +59,11 @@ export async function finalizeAndNavigate(
 
       const url = decorateUrl("/(tabs)");
       if (url.startsWith("http")) {
+        if (Platform.OS === "web") {
+          window.location.href = url;
+        } else {
+          void Linking.openURL(url);
+        }
         return;
       }
 

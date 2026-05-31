@@ -26,8 +26,8 @@ import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 const SafeAreaView = styled(RNSafeAreaView);
 
 export default function SignUp() {
+  const { isLoaded, isSignedIn } = useAuth();
   const { signUp, errors, fetchStatus } = useSignUp();
-  const { isSignedIn } = useAuth();
   const router = useRouter();
 
   const [emailAddress, setEmailAddress] = useState("");
@@ -43,11 +43,13 @@ export default function SignUp() {
   const isSubmitting = fetchStatus === "fetching";
 
   const isAwaitingVerification =
+    isLoaded &&
     signUp.status === "missing_requirements" &&
     signUp.unverifiedFields.includes("email_address") &&
     signUp.missingFields.length === 0;
 
   const canSubmit =
+    isLoaded &&
     emailAddress.trim().length > 0 &&
     password.length > 0 &&
     confirmPassword.length > 0 &&
@@ -76,6 +78,8 @@ export default function SignUp() {
   };
 
   const handleSubmit = async () => {
+    if (!isLoaded) return;
+
     if (!validateRegistration()) {
       return;
     }
@@ -93,12 +97,24 @@ export default function SignUp() {
   };
 
   const handleVerify = async () => {
+    if (!isLoaded) return;
+
     await signUp.verifications.verifyEmailCode({ code });
 
     if (signUp.status === "complete") {
       await finalizeAndNavigate(signUp, router);
     }
   };
+
+  if (!isLoaded) {
+    return (
+      <SafeAreaView className="auth-safe-area">
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator color="#081126" />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (signUp.status === "complete" || isSignedIn) {
     return null;
@@ -163,7 +179,10 @@ export default function SignUp() {
 
                   <Pressable
                     className="auth-secondary-button"
-                    onPress={() => signUp.verifications.sendEmailCode()}
+                    onPress={() => {
+                      if (!isLoaded) return;
+                      void signUp.verifications.sendEmailCode();
+                    }}
                     disabled={isSubmitting}
                   >
                     <Text className="auth-secondary-button-text">
@@ -225,10 +244,11 @@ export default function SignUp() {
                   value={password}
                   onChangeText={(value) => {
                     setPassword(value);
-                    if (clientErrors.password) {
+                    if (clientErrors.password || clientErrors.confirmPassword) {
                       setClientErrors((prev) => ({
                         ...prev,
                         password: undefined,
+                        confirmPassword: undefined,
                       }));
                     }
                   }}

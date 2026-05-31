@@ -2,7 +2,8 @@ import { getUserEmail } from "@/lib/auth";
 import { useClerk, useUser } from "@clerk/expo";
 import clsx from "clsx";
 import { styled } from "nativewind";
-import { Pressable, Text, View } from "react-native";
+import { useState } from "react";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
@@ -10,8 +11,22 @@ const SafeAreaView = styled(RNSafeAreaView);
 export default function Settings() {
   const { user } = useUser();
   const { signOut } = useClerk();
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const email = getUserEmail(user);
+
+  const handleSignOut = async () => {
+    if (isSigningOut) return;
+
+    setIsSigningOut(true);
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Failed to sign out:", error);
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background p-5">
@@ -27,10 +42,15 @@ export default function Settings() {
       </View>
 
       <Pressable
-        className={clsx("auth-button mt-8")}
-        onPress={() => signOut()}
+        className={clsx("auth-button mt-8", isSigningOut && "auth-button-disabled")}
+        onPress={handleSignOut}
+        disabled={isSigningOut}
       >
-        <Text className="auth-button-text">Sign out</Text>
+        {isSigningOut ? (
+          <ActivityIndicator color="#081126" />
+        ) : (
+          <Text className="auth-button-text">Sign out</Text>
+        )}
       </Pressable>
     </SafeAreaView>
   );
